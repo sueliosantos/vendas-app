@@ -1,19 +1,26 @@
+import { Produto } from "app/models/produtos";
+import { useProdutoService } from "app/services";
 import { Layout, Input } from "components";
 import { useState } from "react";
 
 export const CadastroProdutos: React.FC = () => {
+  const service = useProdutoService();
   const [sku, setSku] = useState<string>("");
   const [preco, setPreco] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [descricao, setDescricao] = useState<string>("");
 
   const submit = () => {
-    const produto = {
+    const produto: Produto = {
       sku,
-      preco,
+      preco: parseFloat(preco),
       nome,
       descricao,
     };
+
+    service
+      .salvar(produto)
+      .then((produtoResposta) => console.log(produtoResposta));
   };
   return (
     <Layout titulo="Produtos">
