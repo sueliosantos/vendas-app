@@ -5,25 +5,53 @@ import { useState } from "react";
 
 export const CadastroProdutos: React.FC = () => {
   const service = useProdutoService();
+  const [id, setId] = useState<string>("");
   const [sku, setSku] = useState<string>("");
   const [preco, setPreco] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [descricao, setDescricao] = useState<string>("");
+  const [cadastro, setCadastro] = useState<string>("");
 
   const submit = () => {
     const produto: Produto = {
+      id,
       sku,
       preco: parseFloat(preco),
       nome,
       descricao,
     };
 
-    service
-      .salvar(produto)
-      .then((produtoResposta) => console.log(produtoResposta));
+    if (id) {
+      service.atualizar(produto).then((response) => console.log("atualizado!"));
+    } else {
+      service.salvar(produto).then((produtoResposta) => {
+        setId(produtoResposta.id);
+        setCadastro(produtoResposta.cadastro);
+      });
+    }
   };
+
   return (
     <Layout titulo="Produtos">
+      {id && (
+        <div className="columns">
+          <Input
+            id="inputCodigo"
+            label="Código: *"
+            columnClasses="is-half"
+            value={id}
+            disabled
+          />
+
+          <Input
+            id="inputData"
+            label="Data cadastro: *"
+            columnClasses="is-half"
+            value={cadastro}
+            disabled
+          />
+        </div>
+      )}
       <div className="columns">
         <Input
           id="inputSku"
@@ -70,7 +98,7 @@ export const CadastroProdutos: React.FC = () => {
       <div className="field is-grouped">
         <div className="control">
           <button onClick={submit} className="button is-link">
-            Salvar
+            {id ? "Atualizar" : "Salvar"}
           </button>
         </div>
         <div className="control">
