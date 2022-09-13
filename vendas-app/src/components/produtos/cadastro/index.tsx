@@ -1,108 +1,174 @@
-import { Produto } from "app/models/produtos";
-import { useProdutoService } from "app/services";
-import { Layout, Input } from "components";
 import { useState } from "react";
+import { Layout, Input, Message } from "components";
+import { useProdutoService } from "app/services";
+import { Produto } from "app/models/produtos";
+import { converterEmBigDecimal } from "app/util/money";
+import { Alert } from "components/common/message";
+import * as yup from "yup";
+import Link from "next/link";
 
+const msgCampoObrigatorio = "Campo Obrigatório";
+
+const validationSchema = yup.object().shape({
+  sku: yup.string().trim().required(msgCampoObrigatorio),
+  nome: yup.string().trim().required(msgCampoObrigatorio),
+  descricao: yup.string().trim().required(msgCampoObrigatorio),
+  preco: yup
+    .number()
+    .required(msgCampoObrigatorio)
+    .moreThan(0, "Valor deve ser maior que 0,00 (Zero)"),
+});
+
+interface FormErros {
+  sku?: string;
+  preco?: string;
+  nome?: string;
+  descricao?: string;
+}
 export const CadastroProdutos: React.FC = () => {
   const service = useProdutoService();
-  const [id, setId] = useState<string>("");
   const [sku, setSku] = useState<string>("");
   const [preco, setPreco] = useState<string>("");
   const [nome, setNome] = useState<string>("");
   const [descricao, setDescricao] = useState<string>("");
+  const [id, setId] = useState<string>("");
   const [cadastro, setCadastro] = useState<string>("");
+  const [messages, setMessages] = useState<Array<Alert>>([]);
+  const [errors, setErros] = useState<FormErros>({});
 
   const submit = () => {
     const produto: Produto = {
       id,
       sku,
-      preco: parseFloat(preco),
+      preco: converterEmBigDecimal(preco),
       nome,
       descricao,
     };
 
-    if (id) {
-      service.atualizar(produto).then((response) => console.log("atualizado!"));
-    } else {
-      service.salvar(produto).then((produtoResposta) => {
-        setId(produtoResposta.id);
-        setCadastro(produtoResposta.cadastro);
+    validationSchema
+      .validate(produto)
+      .then((obj) => {
+        setErros({});
+        if (id) {
+          service.atualizar(produto).then((response) => {
+            setMessages([
+              {
+                tipo: "success",
+                texto: "Produto atualizado com sucesso!",
+              },
+            ]);
+          });
+        } else {
+          service.salvar(produto).then((produtoResposta) => {
+            setId(produtoResposta.id);
+            setCadastro(produtoResposta.cadastro);
+            setMessages([
+              {
+                tipo: "success",
+                texto: "Produto Salvo com sucesso!",
+              },
+            ]);
+          });
+        }
+      })
+      .catch((err) => {
+        const field = err.path;
+        const message = err.message;
+
+        setErros({
+          [field]: message,
+        });
       });
-    }
   };
 
   return (
-    <Layout titulo="Produtos">
+    <Layout titulo="Produtos" mensagens={messages}>
       {id && (
         <div className="columns">
           <Input
-            id="inputCodigo"
-            label="Código: *"
+            label="Código:"
             columnClasses="is-half"
             value={id}
-            disabled
+            id="inputId"
+            disabled={true}
           />
 
           <Input
-            id="inputData"
-            label="Data cadastro: *"
+            label="Data Cadastro:"
             columnClasses="is-half"
             value={cadastro}
+            id="inputDataCadastro"
             disabled
           />
         </div>
       )}
+
       <div className="columns">
         <Input
-          id="inputSku"
           label="SKU: *"
           columnClasses="is-half"
           onChange={setSku}
+          value={sku}
+          id="inputSku"
           placeholder="Digite o SKU do produto"
+          error={errors.sku}
         />
 
         <Input
-          id="inputPreco"
           label="Preço: *"
           columnClasses="is-half"
           onChange={setPreco}
-          placeholder="Digite o preço do produto"
+          value={preco}
+          id="inputPreco"
+          placeholder="Digite o Preço do produto"
+          currency
+          maxLength={16}
+          error={errors.preco}
         />
       </div>
 
-      <div className="field">
+      <div className="columns">
         <Input
-          id="inputNome"
           label="Nome: *"
           columnClasses="is-full"
           onChange={setNome}
-          placeholder="Digite o nome do produto"
+          value={nome}
+          id="inputNome"
+          placeholder="Digite o Nome do produto"
+          error={errors.nome}
         />
       </div>
 
-      <div className="field">
-        <label className="label" htmlFor="inputDesc">
-          Descrição: *
-        </label>
-        <div className="control">
-          <textarea
-            className="textarea"
-            id="inputDesc"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            placeholder="Digite a Descrição detalhada do produto"
-          />
+      <div className="columns">
+        <div className="field column is-full">
+          <label className="label" htmlFor="inputDesc">
+            Descrição: *
+          </label>
+          <div className="control">
+            <textarea
+              className="textarea"
+              id="inputDesc"
+              value={descricao}
+              onChange={(event) => setDescricao(event.target.value)}
+              placeholder="Digite a Descrição detalhada do produto"
+            />
+            {errors.descricao && (
+              <p className="help is-danger">{errors.descricao}</p>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="field is-grouped">
-        <div className="control">
-          <button onClick={submit} className="button is-link">
+        <div className="control is-link">
+          <button onClick={submit} button className="button is-link">
             {id ? "Atualizar" : "Salvar"}
           </button>
         </div>
         <div className="control">
-          <button className="button is-link is-light">Cancelar</button>
+          <Link href={"/consultas/produtos"}>
+            <button className="button is-link is-light">Voltar</button>
+          </Link>
         </div>
       </div>
     </Layout>

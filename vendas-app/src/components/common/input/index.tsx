@@ -1,16 +1,21 @@
-import { InputHTMLAttributes } from "react";
+import { FormEvent, InputHTMLAttributes } from "react";
+import { formatReal } from "app/util/money";
+import { isNumber } from "util";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   onChange?: (value: any) => void;
   id: string;
   label: string;
   columnClasses?: string;
+  currency?: boolean;
+  error?: string;
 }
 export const Input: React.FC<InputProps> = ({
   onChange,
   id,
   label,
   columnClasses,
+  error,
   ...inputProps
 }: InputProps) => {
   return (
@@ -29,6 +34,7 @@ export const Input: React.FC<InputProps> = ({
             }
           }}
         />
+        {error && <p className="help is-danger">{error}</p>}
       </div>
     </div>
   );
