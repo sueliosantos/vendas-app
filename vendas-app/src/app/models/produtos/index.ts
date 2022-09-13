@@ -3,6 +3,6 @@ export interface Produto {
   nome?: string;
   descricao?: string;
   sku?: string;
-  preco?: Number;
+  preco?: string;
   cadastro?: string;
 }

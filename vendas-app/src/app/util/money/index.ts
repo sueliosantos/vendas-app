@@ -1,8 +1,11 @@
-export const converterEmBigDecimal = (value: any): number => {
+export const converterEmBigDecimal = (value): number => {
   if (!value) {
     return 0;
   }
-  return value.replace(".", "").replace(",", ".");
+
+  if (value.toString().includes(".")) {
+    return value.replace(".", "").replace(",", ".");
+  }
 };
 
 export const formatReal = (valor: any) => {
