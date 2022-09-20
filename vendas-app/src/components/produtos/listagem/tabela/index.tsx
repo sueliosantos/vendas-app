@@ -77,7 +77,7 @@ const ProdutoRow: React.FC<ProdutoRowProps> = ({
           </button>
         )}
         <button
-          onClick={(e) => onDeleteClik(produto)}
+          onClick={(e) => onDeleteClik()}
           className="button is-danger is-rounded is-small"
         >
           {deletando ? "Confirma" : "Deletar"}
