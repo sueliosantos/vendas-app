@@ -47,14 +47,13 @@ export const CadastroProdutos: React.FC = () => {
         setSku(produtoEncontrado.sku);
         setNome(produtoEncontrado.nome);
         setDescricao(produtoEncontrado.descricao);
+        setPreco(formatReal(`${produtoEncontrado.preco}`));
         setCadastro(produtoEncontrado.cadastro || "");
-        setPreco(produtoEncontrado.preco);
       });
     }
   }, [idEdicao]);
 
   const submit = () => {
-    console.log(preco);
     const produto: Produto = {
       id,
       sku,

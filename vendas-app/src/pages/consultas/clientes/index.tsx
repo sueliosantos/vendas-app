@@ -1,3 +1,3 @@
-import { CadastroCliente } from "components";
+import { ListagemClientes } from "components";
 
-export default CadastroCliente;
+export default ListagemClientes;

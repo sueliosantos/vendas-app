@@ -1,7 +1,8 @@
 import { Cliente } from "app/models/clientes";
 import { useFormik } from "formik";
-import { Input } from "components";
+import { Input, InputCPF, InputFone, InputData } from "components";
 import Link from "next/link";
+import * as Yup from "yup";
 
 interface ClienteFormProps {
   cliente: Cliente;
@@ -12,12 +13,36 @@ const formScheme: Cliente = {
   cadastro: "",
   nome: "",
   cpf: "",
-  dataNascimento: "",
+  nascimento: "",
   email: "",
   endereco: "",
   telefone: "",
   id: "",
 };
+
+const campoObrigatorioMensagem = "Campo obrigatório";
+
+const validationScheme = Yup.object().shape({
+  cpf: Yup.string()
+    .trim()
+    .required(campoObrigatorioMensagem)
+    .length(14, "CPF inválido"),
+
+  nome: Yup.string().trim().required(campoObrigatorioMensagem),
+
+  nascimento: Yup.string()
+    .trim()
+    .required(campoObrigatorioMensagem)
+    .length(10, "Data inválida"),
+
+  email: Yup.string()
+    .trim()
+    .required(campoObrigatorioMensagem)
+    .email("Email inválido"),
+
+  endereco: Yup.string().trim().required(campoObrigatorioMensagem),
+  telefone: Yup.string().trim().required(campoObrigatorioMensagem),
+});
 export const ClienteForm: React.FC<ClienteFormProps> = ({
   cliente,
   onSubmit,
@@ -25,6 +50,8 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
   const formik = useFormik<Cliente>({
     initialValues: { ...formScheme, ...cliente },
     onSubmit,
+    enableReinitialize: true,
+    validationSchema: validationScheme,
   });
 
   return (
@@ -61,10 +88,11 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
           label="Nome: *"
           autoComplete="off"
           columnClasses="is-full"
+          error={formik.errors.nome}
         />
       </div>
       <div className="columns">
-        <Input
+        <InputCPF
           id="cpf"
           name="cpf"
           onChange={formik.handleChange}
@@ -72,16 +100,18 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
           label="CPF: *"
           autoComplete="off"
           columnClasses="is-half"
+          error={formik.errors.cpf}
         />
 
-        <Input
-          id="dataNascimento"
-          name="dataNascimento"
+        <InputData
+          id="nascimento"
+          name="nascimento"
           onChange={formik.handleChange}
-          value={formik.values.dataNascimento}
+          value={formik.values.nascimento}
           label="Data Nascimento:"
           autoComplete="off"
           columnClasses="is-half"
+          error={formik.errors.nascimento}
         />
       </div>
       <div>
@@ -93,6 +123,7 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
           label="Endereço: *"
           autoComplete="off"
           columnClasses="is-full"
+          error={formik.errors.endereco}
         />
       </div>
       <div className="columns">
@@ -100,13 +131,14 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
           id="email"
           name="email"
           onChange={formik.handleChange}
-          value={formik.values.cpf}
+          value={formik.values.email}
           label="Email: *"
           autoComplete="off"
           columnClasses="is-half"
+          error={formik.errors.email}
         />
 
-        <Input
+        <InputFone
           id="telefone"
           name="telefone"
           onChange={formik.handleChange}
@@ -114,6 +146,7 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
           label="Telefone:"
           autoComplete="off"
           columnClasses="is-half"
+          error={formik.errors.telefone}
         />
       </div>
 

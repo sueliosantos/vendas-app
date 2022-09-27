@@ -1,6 +1,6 @@
 export interface Cliente {
   id?: string;
-  dataNascimento?: string;
+  nascimento?: string;
   cpf?: string;
   nome?: string;
   endereco?: string;
