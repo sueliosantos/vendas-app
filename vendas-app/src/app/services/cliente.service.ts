@@ -1,6 +1,6 @@
 import { httpClient } from "app/http";
 import { Cliente } from "app/models/clientes";
-import { Axios, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import { Page } from "app/models/common/page";
 
 const resourceURL: string = "/api/clientes";
@@ -27,7 +27,7 @@ export const useClienteService = () => {
 
   const deletar = async (id): Promise<void> => {
     const url: string = `${resourceURL}/${id}`;
-    httpClient.delete(url);
+    await httpClient.delete(url);
   };
 
   const find = async (

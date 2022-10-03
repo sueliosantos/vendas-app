@@ -53,7 +53,7 @@ export const ListagemClientes: React.FC = () => {
   const deletar = (cliente: Cliente) => {
     console.log("chegou");
     service.deletar(cliente.id).then((result) => {
-      handlePage(null);
+      handlePage;
     });
   };
 
