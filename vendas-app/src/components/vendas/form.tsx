@@ -2,7 +2,8 @@ import { Cliente } from "app/models/clientes";
 import { Page } from "app/models/common/page";
 import { ItemVenda, Venda } from "app/models/vendas";
 import { useClienteService, useProdutoService } from "app/services";
-import { useFormik } from "formik";
+import { Formik, useFormik } from "formik";
+import { Dropdown } from "primereact/dropdown";
 import {
   AutoComplete,
   AutoCompleteChangeParams,
@@ -16,8 +17,12 @@ import { Produto } from "app/models/produtos";
 import { Dialog } from "primereact/dialog";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { ListagemProdutos } from "components/produtos";
+import { validationScheme } from "./validationShema";
 
+const formatadorMonye = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
 interface VendasFormProps {
   onSubmit: (venda: Venda) => void;
 }
@@ -30,6 +35,7 @@ const formSchema: Venda = {
 };
 
 export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
+  const formaPagamento: String[] = ["DINHEIRO", "CARTÃO"];
   const service = useClienteService();
   const produtoService = useProdutoService();
   const [produto, setProduto] = useState<Produto>();
@@ -51,6 +57,7 @@ export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
   const formik = useFormik<Venda>({
     onSubmit,
     initialValues: formSchema,
+    validationSchema: validationScheme,
   });
 
   const handleAddProduto = () => {
@@ -76,6 +83,8 @@ export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
     setProduto(null);
     setCodigoProduto("");
     setQuantidadeProduto(0);
+    const total = totalVenda();
+    formik.setFieldValue("total", total);
   };
   const handleClienteAutoComplete = (e: AutoCompleteCompleteMethodParams) => {
     const nome = e.query;
@@ -127,10 +136,23 @@ export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
     }
 
     const produtosEncontrados = listProdutos.filter((produto: Produto) => {
-      return produto.nome.toUpperCase().includes(e.query.toUpperCase());
+      return produto.nome?.toUpperCase().includes(e.query.toUpperCase());
     });
 
     setListFiltradaProdutos(produtosEncontrados);
+  };
+
+  const totalVenda = () => {
+    const totais: number[] = formik.values.itens?.map(
+      (iv) => iv.quantidade * iv.produto.preco
+    );
+    if (totais.length) {
+      return totais.reduce(
+        (somatorioAtual = 0, valorItemAtual) => somatorioAtual + valorItemAtual
+      );
+    } else {
+      return 0;
+    }
   };
 
   return (
@@ -147,6 +169,7 @@ export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
             value={formik.values.cliente}
             onChange={handleClienteChange}
           />
+          <small className="p-error p-d-block">{formik.errors.cliente}</small>
         </div>
 
         <div className="p-grid">
@@ -198,7 +221,10 @@ export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
           </div>
 
           <div className="p-col-12">
-            <DataTable value={formik.values.itens}>
+            <DataTable
+              value={formik.values.itens}
+              emptyMessage="Nenhum produto adicionado."
+            >
               <Column field="produto.id" header="Código" />
               <Column field="produto.nome" header="Produto" />
               <Column field="produto.sku" header="sku" />
@@ -206,11 +232,68 @@ export const VendasForm: React.FC<VendasFormProps> = ({ onSubmit }) => {
               <Column field="quantidade" header="QTD" />
               <Column
                 body={(iv: ItemVenda) => {
-                  return <div>{iv.quantidade * iv.produto.preco}</div>;
+                  const total = iv.quantidade * iv.produto.preco;
+                  const totalFormatado = formatadorMonye.format(total);
+
+                  return <div>{totalFormatado}</div>;
                 }}
                 header="Total"
               />
+              <Column
+                body={(item: ItemVenda) => {
+                  const handleRemoverItem = () => {
+                    const novaLista = formik.values.itens?.filter(
+                      (iv) => iv.produto.id !== item.produto.id
+                    );
+                    formik.setFieldValue("itens", novaLista);
+                  };
+                  return (
+                    <Button
+                      type="button"
+                      label="Excluir"
+                      onClick={handleRemoverItem}
+                    />
+                  );
+                }}
+              />
             </DataTable>
+            <small className="p-error p-d-block">
+              {formik.touched && formik.errors.itens}
+            </small>
+          </div>
+
+          <div className="p-col-5">
+            <div className="p-field">
+              <label htmlFor="formaPG">Forma de pagamento: *</label>
+              <Dropdown
+                id="formaPagamento"
+                options={formaPagamento}
+                value={formik.values.formaPagamento}
+                onChange={(e) =>
+                  formik.setFieldValue("formaPagamento", e.value)
+                }
+                placeholder="Selecione"
+              />
+              <small className="p-error p-d-block">
+                {formik.touched && formik.errors.formaPagamento}
+              </small>
+            </div>
+          </div>
+          <div className="p-col-2">
+            <div className="p-field">
+              <label htmlFor="itens">Itens:</label>
+              <InputText disabled value={formik.values.itens?.length} />
+            </div>
+          </div>
+
+          <div className="p-col-2">
+            <div className="p-field">
+              <label htmlFor="total">Total:</label>
+              <InputText
+                disabled
+                value={formatadorMonye.format(formik.values.total)}
+              />
+            </div>
           </div>
         </div>
 
